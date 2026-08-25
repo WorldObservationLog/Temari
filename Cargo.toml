@@ -6,7 +6,7 @@ description = "Apple Music FairPlay SAMPLE-AES sample decryption library (cdylib
 license = "MIT"
 repository = "https://github.com/WorldObservationLog/Temari"
 readme = "README.md"
-keywords = ["fairplay", "drm", "decryption", "apple-music", "sample-aes", "ffi"]
+keywords = ["decryption"]
 categories = ["cryptography", "multimedia"]
 rust-version = "1.70"
 
