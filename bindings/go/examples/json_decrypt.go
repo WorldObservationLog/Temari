@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"temari"
+	"github.com/WorldObservationLog/Temari/bindings/go"
 )
 
 var tracks = map[string]string{

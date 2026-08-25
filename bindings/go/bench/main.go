@@ -19,7 +19,7 @@ import (
 	"runtime"
 	"time"
 
-	"temari"
+	"github.com/WorldObservationLog/Temari/bindings/go"
 )
 
 const adam = "1720704575"

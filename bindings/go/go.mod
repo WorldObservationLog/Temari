@@ -1,4 +1,4 @@
-module temari
+module github.com/WorldObservationLog/Temari/bindings/go
 
 go 1.23
 
