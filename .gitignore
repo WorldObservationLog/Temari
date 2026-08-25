@@ -1,0 +1,24 @@
+# Rust build artifacts
+/target
+/tools/temari-decrypt/target
+**/*.rs.bk
+
+# Not shipped in the official submission (internal dev-only)
+/tools
+/tests
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Go
+bindings/go/temari.exe
+
+# IDE
+.idea/
+.vscode/
+/.wsl-venv

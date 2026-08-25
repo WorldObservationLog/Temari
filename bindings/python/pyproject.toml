@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "temari"
+version = "0.1.0"
+description = "Apple Music FairPlay SAMPLE-AES sample decryption — ctypes bindings to the Temari cdylib (libtemari)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+
+[tool.setuptools]
+packages = ["temari"]
