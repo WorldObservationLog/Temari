@@ -18,8 +18,8 @@ jobs:
       matrix:
         include:
           - { name: linux-x86_64, os: ubuntu-latest, arch: x86_64 }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, arch: aarch64 }
           - { name: windows-x86_64, os: windows-latest, arch: x86_64 }
-          - { name: macos-x86_64, os: macos-13, arch: x86_64 }
           - { name: macos-arm64, os: macos-14, arch: arm64 }
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,6 +29,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build bundled cdylib (host platform)
+        shell: bash
         run: |
           rm -rf bindings/python/temari/lib bindings/go/lib
           python scripts/build_platform_libs.py
@@ -41,16 +42,17 @@ jobs:
             bindings/python/temari/lib
           if-no-files-found: error
       - name: Build wheel (cibuildwheel)
+        working-directory: bindings/python
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "${{ matrix.arch }}"
-          CIBW_BEFORE_BUILD: "python scripts/build_platform_libs.py"
+          CIBW_BEFORE_BUILD: "python ../../scripts/build_platform_libs.py"
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.name }}
-          path: wheelhouse/*.whl
+          path: bindings/python/wheelhouse/*.whl
 
   pypi:
     name: publish to PyPI
