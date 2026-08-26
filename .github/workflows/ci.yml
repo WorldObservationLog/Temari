@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"   # >=1.24 needed for macOS arm64 (dyld LC_UUID)
+          cache-dependency-path: bindings/go/go.sum
       - name: Build cdylib
         run: cargo build --release
       - name: Rust tests
