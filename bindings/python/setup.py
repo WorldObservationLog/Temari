@@ -24,10 +24,13 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCRIPT = os.path.join(REPO, "scripts", "build_platform_libs.py")
 LIB_DIR = os.path.join(HERE, "temari", "lib")
 
-# platform key (lib directory name) -> wheel platform tag
+# platform key (lib directory name) -> wheel platform tag.
+# Used only for single-platform local/dev builds; the CI release assembles all
+# platforms into one `py3-none-any` wheel (bundled_platform_key() -> None),
+# so these tags do not affect the published wheel.
 PLAT_TAGS = {
-    "linux-x86_64": "manylinux_2_17_x86_64",
-    "linux-aarch64": "manylinux_2_17_aarch64",
+    "linux-x86_64": "manylinux_2_34_x86_64",
+    "linux-aarch64": "manylinux_2_34_aarch64",
     "windows-x86_64": "win_amd64",
     "macos-x86_64": "macosx_10_12_x86_64",
     "macos-arm64": "macosx_11_0_arm64",
