@@ -62,7 +62,7 @@ jobs:
         run: |
           rm -rf bindings/python/temari/lib
           mkdir -p bindings/python/temari/lib
-          cp -r libs/linux-x86_64 libs/linux-aarch64 libs/windows-x86_64 libs/macos-arm64 bindings/python/temari/lib/
+          cp -r libs/bindings/python/temari/lib/* bindings/python/temari/lib/
           find bindings/python/temari/lib -type f
       - name: Build sdist + universal wheel
         working-directory: bindings/python
@@ -115,7 +115,7 @@ jobs:
         run: |
           rm -rf bindings/go/lib
           mkdir -p bindings/go/lib
-          cp -r libs/* bindings/go/lib/
+          cp -r libs/bindings/go/lib/* bindings/go/lib/
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
