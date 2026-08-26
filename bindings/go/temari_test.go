@@ -23,14 +23,28 @@ func repoRoot() string {
 }
 
 func soPath(t *testing.T) string {
-	p := os.Getenv("TEMARI_LIB")
-	if p == "" {
-		p = filepath.Join(repoRoot(), "target", "release", "libtemari.so")
+	if p := os.Getenv("TEMARI_LIB"); p != "" {
+		return p
 	}
-	if _, err := os.Stat(p); err != nil {
-		t.Skipf("libtemari.so not found at %s (run `cargo build --release` first)", p)
+	// prefer the cdylib bundled with this module (bindings/go/lib/<platform>)
+	if p, err := temari.BundledLibraryPath(); err == nil {
+		return p
 	}
-	return p
+	names := []string{"libtemari.so"}
+	switch runtime.GOOS {
+	case "windows":
+		names = []string{"temari.dll", "libtemari.dll"}
+	case "darwin":
+		names = []string{"libtemari.dylib"}
+	}
+	for _, n := range names {
+		p := filepath.Join(repoRoot(), "target", "release", n)
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	t.Skip("no cdylib found (run `cargo build --release` or bundle libs)")
+	return ""
 }
 
 func data(t *testing.T, ext string) []byte {

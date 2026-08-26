@@ -99,7 +99,11 @@ func main() {
 		}
 	}
 
-	lib, err := temari.Load(soPath)
+	// prefer the cdylib bundled with this module; fall back to the local build
+	lib, err := temari.LoadDefault()
+	if err != nil {
+		lib, err = temari.Load(soPath)
+	}
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

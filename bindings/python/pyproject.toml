@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -27,3 +27,6 @@ Documentation = "https://github.com/WorldObservationLog/Temari"
 
 [tool.setuptools]
 packages = ["temari"]
+
+[tool.setuptools.package-data]
+temari = ["lib/*/*"]

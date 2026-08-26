@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build cdylib
+        run: cargo build --release
+      - name: Rust tests
+        run: cargo test --release
+      - name: Python tests
+        working-directory: bindings/python
+        run: |
+          python -m pip install --quiet pytest
+          python -m pytest tests -q
+      - name: Go tests
+        working-directory: bindings/go
+        run: go vet ./... && go test ./...
+
+  libs:
+    name: libs (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x86_64, os: ubuntu-latest }
+          - { name: windows-x86_64, os: windows-latest }
+          - { name: macos-x86_64, os: macos-13 }
+          - { name: macos-arm64, os: macos-14 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build bundled cdylib (host platform)
+        run: |
+          rm -rf bindings/python/temari/lib bindings/go/lib
+          python3 scripts/build_platform_libs.py
+      - name: Upload platform libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib-${{ matrix.name }}
+          path: |
+            bindings/go/lib
+            bindings/python/temari/lib
+          if-no-files-found: error

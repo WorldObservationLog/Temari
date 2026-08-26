@@ -31,6 +31,8 @@ import array
 import asyncio
 import ctypes
 import os
+import platform
+import sys
 
 __all__ = ["Temari", "TemariError", "StreamDecryptor", "load", "default_library_path"]
 
@@ -41,14 +43,53 @@ class TemariError(RuntimeError):
     """Raised when the cdylib fails to load or a native call returns an error."""
 
 
-def default_library_path():
-    """Return the default cdylib path (repo `target/release/libtemari.so`).
+def _platform_key():
+    """Return a short platform key like 'linux-x86_64' / 'windows-x86_64' /
+    'macos-arm64', matching the bundled-lib directory names produced by
+    scripts/build_platform_libs.py, or None if unknown."""
+    p = sys.platform
+    osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
+        "windows" if p in ("win32", "cygwin") else None
+    if not osname:
+        return None
+    m = platform.machine().lower()
+    arch = "x86_64" if m in ("x86_64", "amd64", "intel64") else \
+        "arm64" if m in ("arm64", "aarch64") else None
+    if not arch:
+        return None
+    return f"{osname}-{arch}"
 
-    Overridable via the ``TEMARI_LIB`` environment variable.
+
+def _bundled_library_path():
+    """Path of the cdylib bundled inside this package (temari/lib/<platform>/),
+    if present. Bundled libs are built and shipped by the PyPI wheels."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    key = _platform_key()
+    if not key:
+        return None
+    names = ("temari.dll", "libtemari.dll") if key.startswith("windows") else \
+        ("libtemari.dylib",) if key.startswith("macos") else ("libtemari.so",)
+    for name in names:
+        p = os.path.join(here, "lib", key, name)
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def default_library_path():
+    """Return the cdylib path used by :func:`load`.
+
+    Resolution order:
+    1. the ``TEMARI_LIB`` environment variable
+    2. the cdylib bundled inside this package (PyPI wheel, per platform)
+    3. the repo build output (``<repo>/target/release/...``)
     """
     env = os.environ.get("TEMARI_LIB")
     if env:
         return env
+    bundled = _bundled_library_path()
+    if bundled:
+        return bundled
     here = os.path.dirname(os.path.abspath(__file__))
     # bindings/python/temari/__init__.py -> <repo>/target/release/
     repo = os.path.abspath(os.path.join(here, "..", "..", ".."))
