@@ -8,13 +8,21 @@ ctypes 封装,用于在 Python 进程内直接解密 Apple Music FairPlay SAMPLE
 **本库不负责网络请求**:模板由**调用方**自行获取(如 urllib 拉 40020 JSON 响应体),
 再交给 `Temari.from_json` 解析。
 
-## 使用
+## 安装
 
 ```bash
-# 先构建 cdylib
+pip install temari        # wheel 已内置各平台动态库
+```
+
+wheel 已内置各平台动态库,目标机器**无需 Rust 工具链**。如需使用本地构建的
+库,可设置 `TEMARI_LIB` 或从仓库构建:
+
+```bash
 cd <temari 仓库根>
 cargo build --release        # 产物 target/release/libtemari.so
 ```
+
+## 使用
 
 ```python
 from temari import Temari

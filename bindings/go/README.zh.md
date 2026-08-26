@@ -11,10 +11,19 @@
 **无需 cgo**:所有调用走 [`purego`](https://github.com/ebitengine/purego),
 `CGO_ENABLED=0` 下即可构建、测试、运行,支持 Linux / macOS / Windows。
 
+## 安装
+
+```bash
+go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0
+```
+
+模块已内置各平台动态库(`lib/<平台>/`),`LoadDefault()` 会按当前 GOOS/GOARCH
+自动选择——目标机器**无需 Rust 工具链**。
+
 ## 使用
 
 ```bash
-# 先构建 cdylib
+# (可选)不用内置库时,可从仓库自行构建 cdylib
 cd <temari 仓库根>
 cargo build --release        # 产物 target/release/libtemari.so
 
@@ -28,7 +37,7 @@ go test ./... -v
 ```go
 import "temari"
 
-lib, err := temari.Load("/path/to/target/release/libtemari.so")
+lib, err := temari.LoadDefault()   // 自动加载当前平台的内置动态库
 
 // 1) 调用方负责网络:拉 40020 风格 JSON 响应体(或读本地 JSON 文件)
 //    body, _ := fetchJSON(server, adamID, uri)   // net/http

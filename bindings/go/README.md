@@ -14,10 +14,20 @@ inside a Go process.
 [`purego`](https://github.com/ebitengine/purego), so `CGO_ENABLED=0` builds,
 tests, and runs work on Linux, macOS, and Windows.
 
+## Install
+
+```bash
+go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0
+```
+
+The module ships the cdylibs for all platforms under `lib/<platform>/`, and
+`LoadDefault()` selects the right one for the current GOOS/GOARCH — no Rust
+toolchain needed on the target machine.
+
 ## Usage
 
 ```bash
-# first build the cdylib
+# (optional) build the cdylib from the repo instead of using the bundled one
 cd <temari repo root>
 cargo build --release        # artifact target/release/libtemari.so
 
@@ -31,7 +41,7 @@ go test ./... -v
 ```go
 import "temari"
 
-lib, err := temari.Load("/path/to/target/release/libtemari.so")
+lib, err := temari.LoadDefault()   // bundled cdylib for the current platform
 
 // 1) caller owns networking: fetch the 40020-style JSON response body (or read a local JSON file)
 //    body, _ := fetchJSON(server, adamID, uri)   // net/http

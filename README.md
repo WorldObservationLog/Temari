@@ -13,11 +13,28 @@ It depends on the decryption-context data provided by [WorldObservationLog/wrapp
 ### How to use
 If you are not a developer, you probably do not need this library. You should look at [zhaarey/apple-music-downloader](https://github.com/zhaarey/apple-music-downloader) and [WorldObservationLog/AppleMusicDecrypt](https://github.com/WorldObservationLog/AppleMusicDecrypt).
 
-Build the dynamic library:
+### Install from package registries
 
-```bash
-cargo build --release        # produces target/release/libtemari.so (temari.dll on Windows)
+All three packages are published and self-contained (platform cdylibs bundled):
+
+| Registry | Package | Install |
+|---|---|---|
+| crates.io | `temari` | `cargo add temari` |
+| PyPI | `temari` | `pip install temari` |
+| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0` |
+
+The Python and Go packages automatically select the bundled cdylib for the
+current platform (Linux x86_64 / arm64, Windows, macOS arm64) — **no Rust
+toolchain is needed on the target machine**. For Rust, add the crate as a
+normal dependency:
+
+```toml
+[dependencies]
+temari = "0.1"
 ```
+
+> Building the cdylib by hand (`cargo build --release`) is only needed for the
+> FFI / manual-loading path.
 
 #### Rust
 ```rust
@@ -61,7 +78,7 @@ See also [`bindings/go`](./bindings/go/README.md)
 ```go
 import "temari"
 
-lib, _ := temari.Load("/path/to/libtemari.so")
+lib, _ := temari.LoadDefault()   // bundled cdylib for the current platform
 t, _ := lib.FromJSON(body)
 plain, _ := t.Decrypt(sample)
 plains, _ := t.DecryptPar(samples)

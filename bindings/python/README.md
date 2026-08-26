@@ -10,13 +10,22 @@ SAMPLE-AES samples directly inside a Python process.
 (e.g. pull the 40020 JSON response body with urllib) and handed to
 `Temari.from_json` for parsing.
 
-## Usage
+## Install
 
 ```bash
-# first build the cdylib
+pip install temari        # wheel bundles the cdylib for all platforms
+```
+
+The wheel already contains the platform cdylibs, so no Rust toolchain is
+needed on the target machine. To use a locally built library instead, set
+`TEMARI_LIB` or build from the repo:
+
+```bash
 cd <temari repo root>
 cargo build --release        # artifact target/release/libtemari.so
 ```
+
+## Usage
 
 ```python
 from temari import Temari

@@ -13,11 +13,26 @@ Apple Music Fairplay Streaming 解密库
 ### 如何使用
 如果您不是开发者，您可能并不需要使用本库。您应当查看 [zhaarey/apple-music-downloader](https://github.com/zhaarey/apple-music-downloader) 和 [WorldObservationLog/AppleMusicDecrypt](https://github.com/WorldObservationLog/AppleMusicDecrypt)
 
-构建动态库:
+### 安装(包注册中心)
 
-```bash
-cargo build --release        # 生成 target/release/libtemari.so(Windows 为 temari.dll)
+三个包均已发布且自包含(内置各平台动态库):
+
+| 注册中心 | 包 | 安装命令 |
+|---|---|---|
+| crates.io | `temari` | `cargo add temari` |
+| PyPI | `temari` | `pip install temari` |
+| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0` |
+
+Python 与 Go 包会自动选择**当前平台**的内置动态库(Linux x86_64 / arm64、
+Windows、macOS arm64)——目标机器上**无需 Rust 工具链**。Rust 侧直接作为
+普通依赖添加:
+
+```toml
+[dependencies]
+temari = "0.1"
 ```
+
+> 仅 FFI / 手动加载路径需要自行构建动态库(`cargo build --release`)。
 
 #### Rust
 ```rust
@@ -61,7 +76,7 @@ t.close()
 ```go
 import "temari"
 
-lib, _ := temari.Load("/path/to/libtemari.so")
+lib, _ := temari.LoadDefault()   // 自动加载当前平台的内置动态库
 t, _ := lib.FromJSON(body)
 plain, _ := t.Decrypt(sample)
 plains, _ := t.DecryptPar(samples)
