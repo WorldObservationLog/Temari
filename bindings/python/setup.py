@@ -43,13 +43,48 @@ def bundled_platform_key():
     return keys[0] if len(keys) == 1 else None
 
 
+def _bundled_platform_present():
+    """True if a bundled lib for the current platform already exists (pre-built
+    by scripts/build_platform_libs.py on the host runner)."""
+    import platform
+    import sys
+
+    p = sys.platform
+    osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
+        "windows" if p in ("win32", "cygwin") else None
+    if not osname:
+        return False
+    m = platform.machine().lower()
+    arch = "x86_64" if m in ("x86_64", "amd64", "intel64") else \
+        "arm64" if m in ("arm64", "aarch64") else None
+    if not arch:
+        return False
+    key = f"{osname}-{arch}"
+    for name in ("temari.dll", "libtemari.dll", "libtemari.dylib", "libtemari.so"):
+        if os.path.exists(os.path.join(LIB_DIR, key, name)):
+            return True
+    return False
+
+
 class BuildPy(build_py):
-    """Compile the host cdylib and bundle it before building the package."""
+    """Compile the host cdylib and bundle it before building the package.
+
+    Skips the (expensive, Rust-toolchain-dependent) build when a bundled lib
+    for this platform already exists — e.g. pre-built by the CI runner or a
+    prior scripts/build_platform_libs.py run. This also avoids running cargo
+    inside cibuildwheel's manylinux container.
+    """
 
     def run(self):
-        if os.path.exists(SCRIPT):
-            print("temari: building bundled cdylib (host platform)...")
-            subprocess.check_call([sys.executable, SCRIPT], cwd=REPO)
+        if not _bundled_platform_present():
+            if os.path.exists(SCRIPT):
+                print("temari: building bundled cdylib (host platform)...")
+                subprocess.check_call([sys.executable, SCRIPT], cwd=REPO)
+            else:
+                raise RuntimeError(
+                    "temari: no bundled cdylib and scripts/build_platform_libs.py "
+                    "not found — build the cdylib first (cargo build --release)"
+                )
         super().run()
 
 
