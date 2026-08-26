@@ -52,7 +52,7 @@ jobs:
       - name: Build bundled cdylib (host platform)
         run: |
           rm -rf bindings/python/temari/lib bindings/go/lib
-          python3 scripts/build_platform_libs.py
+          python scripts/build_platform_libs.py
       - name: Upload platform libs
         uses: actions/upload-artifact@v4
         with:

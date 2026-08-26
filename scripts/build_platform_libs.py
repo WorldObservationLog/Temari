@@ -37,14 +37,12 @@ GO_LIB = os.path.join(REPO, "bindings", "go", "lib")
 
 
 def host_target():
-    system, machine = os.uname().sysname.lower(), os.uname().machine.lower()
-    if system == "linux":
-        return "x86_64-unknown-linux-gnu" if machine in ("x86_64", "amd64") else \
-            "aarch64-unknown-linux-gnu" if machine == "aarch64" else None
-    if system == "darwin":
-        return "aarch64-apple-darwin" if machine in ("arm64", "aarch64") else "x86_64-apple-darwin"
-    if system == "windows":
-        return "x86_64-pc-windows-gnu"  # best-effort default
+    """Return the exact host target triple (e.g. x86_64-unknown-linux-gnu,
+    x86_64-pc-windows-msvc, aarch64-apple-darwin) from `rustc -vV`."""
+    out = subprocess.run(["rustc", "-vV"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if line.startswith("host:"):
+            return line.split(":", 1)[1].strip()
     return None
 
 
@@ -57,8 +55,10 @@ def installed_targets():
 def build_one(triple):
     key, fname = TARGETS[triple]
     flags = []
-    if "windows" in triple:
-        # pure-std crate: link with the toolchain's rust-lld + self-contained CRT
+    if "windows" in triple and not sys.platform.startswith("win"):
+        # cross-compiling a pure-std crate from a non-Windows host: link with
+        # the toolchain's rust-lld + self-contained CRT (no MinGW needed).
+        # On a native Windows runner we build with the default MSVC toolchain.
         flags = ["-C", "linker=rust-lld", "-C", "link-self-contained=yes"]
     print(f"[build] {triple} ...", flush=True)
     env = dict(os.environ)
