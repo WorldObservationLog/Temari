@@ -42,8 +42,9 @@ jobs:
             bindings/python/temari/lib
           if-no-files-found: error
       - name: Build wheel (cibuildwheel)
-        working-directory: bindings/python
         uses: pypa/cibuildwheel@v2.21.3
+        with:
+          package-dir: bindings/python
         env:
           CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "${{ matrix.arch }}"
