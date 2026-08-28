@@ -33,6 +33,7 @@ PLAT_TAGS = {
     "linux-x86_64": "manylinux_2_34_x86_64",
     "linux-aarch64": "manylinux_2_34_aarch64",
     "windows-x86_64": "win_amd64",
+    "windows-arm64": "win_arm64",
     "macos-x86_64": "macosx_10_12_x86_64",
     "macos-arm64": "macosx_11_0_arm64",
 }

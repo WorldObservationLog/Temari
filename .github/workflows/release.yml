@@ -19,10 +19,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: linux-x86_64, os: ubuntu-latest }
-          - { name: linux-arm64, os: ubuntu-24.04-arm }
-          - { name: windows-x86_64, os: windows-latest }
-          - { name: macos-arm64, os: macos-14 }
+          - { name: linux-x86_64, os: ubuntu-latest, targets: "" }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, targets: "" }
+          # Windows arm64 / macOS x86_64 are CROSS-compiled on the x86_64 / arm64
+          # runners (no Intel-Mac runner needed):
+          - { name: windows-x86_64, os: windows-latest, targets: aarch64-pc-windows-msvc }
+          - { name: macos-arm64, os: macos-14, targets: x86_64-apple-darwin }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -30,7 +32,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Build bundled cdylib (host platform)
+      - name: Install cross-compile targets
+        if: matrix.targets != ''
+        run: rustup target add ${{ matrix.targets }}
+      - name: Build bundled cdylib (host + cross targets)
         shell: bash
         run: |
           rm -rf bindings/python/temari/lib bindings/go/lib
@@ -64,7 +69,8 @@ jobs:
           rm -rf bindings/python/temari/lib
           mkdir -p bindings/python/temari/lib
           find libs -type d \( -name "linux-x86_64" -o -name "linux-aarch64" \
-            -o -name "windows-x86_64" -o -name "macos-arm64" \) \
+            -o -name "windows-x86_64" -o -name "windows-arm64" \
+            -o -name "macos-arm64" -o -name "macos-x86_64" \) \
             -exec cp -r {} bindings/python/temari/lib/ \;
           find bindings/python/temari/lib -type f
       - name: Build sdist + universal wheel
@@ -120,7 +126,8 @@ jobs:
           rm -rf bindings/go/lib
           mkdir -p bindings/go/lib
           find libs -type d \( -name "linux-x86_64" -o -name "linux-aarch64" \
-            -o -name "windows-x86_64" -o -name "macos-arm64" \) \
+            -o -name "windows-x86_64" -o -name "windows-arm64" \
+            -o -name "macos-arm64" -o -name "macos-x86_64" \) \
             -exec cp -r {} bindings/go/lib/ \;
           find bindings/go/lib -type f
       - name: Commit and push

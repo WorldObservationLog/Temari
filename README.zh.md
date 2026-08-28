@@ -24,15 +24,16 @@ Apple Music Fairplay Streaming 解密库
 | Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0` |
 
 Python 与 Go 包会自动选择**当前平台**的内置动态库(Linux x86_64 / arm64、
-Windows、macOS arm64)——目标机器上**无需 Rust 工具链**。Rust 侧直接作为
-普通依赖添加:
+Windows x86_64 / arm64、macOS x86_64 / arm64——其中 macOS x86_64 与
+Windows arm64 为**交叉编译**产出,不使用 Intel Mac runner)——目标机器上
+**无需 Rust 工具链**。Rust 侧直接作为普通依赖添加:
 
 ```toml
 [dependencies]
 temari = "0.1"
 ```
 
-**未预编译的平台**(如 macOS x86_64、Windows arm64):Python wheel 内置了 Rust
+**未预编译的平台**(如 riscv64、ppc64le、FreeBSD):Python wheel 内置了 Rust
 源码,可自行编译——安装时用 `pip install temari --no-binary :all:`,或装有
 `cargo` 时首次使用自动编译。Go 模块未携带 Rust 源码;此类平台上请自行构建
 动态库(`cargo build --release`)并用 `TEMARI_LIB` / `Load()` 指定。

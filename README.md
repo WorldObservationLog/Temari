@@ -24,7 +24,9 @@ All three packages are published and self-contained (platform cdylibs bundled):
 | Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0` |
 
 The Python and Go packages automatically select the bundled cdylib for the
-current platform (Linux x86_64 / arm64, Windows, macOS arm64) — **no Rust
+current platform (Linux x86_64 / arm64, Windows x86_64 / arm64, macOS
+x86_64 / arm64 — the macOS x86_64 and Windows arm64 libs are cross-compiled,
+no Intel-Mac runner is used) — **no Rust
 toolchain is needed on the target machine**. For Rust, add the crate as a
 normal dependency:
 
@@ -33,7 +35,7 @@ normal dependency:
 temari = "0.1"
 ```
 
-**Un-precompiled platforms** (e.g. macOS x86_64, Windows arm64): the Python
+**Un-precompiled platforms** (e.g. riscv64, ppc64le, FreeBSD): the Python
 wheel ships the Rust source, so it can self-compile — at install time with
 `pip install temari --no-binary :all:`, or automatically on first use when
 `cargo` is installed. The Go module does not carry the Rust source; on such

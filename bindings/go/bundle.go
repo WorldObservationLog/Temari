@@ -42,10 +42,11 @@ func BundledLibraryPath() (string, error) {
 	}
 	return "", fmt.Errorf(
 		"temari: no bundled cdylib for %s-%s (bundled: linux x86_64/arm64, "+
-			"windows x86_64, macos arm64). To use this platform, build the "+
-			"cdylib yourself (`cargo build --release` in the temari repo, Rust "+
-			"required) and point Load()/TEMARI_LIB at the artifact, or add the "+
-			"platform to scripts/build_platform_libs.py and the release matrix.",
+			"windows x86_64/arm64, macos x86_64/arm64). To use this platform, "+
+			"build the cdylib yourself (`cargo build --release` in the temari "+
+			"repo, Rust required) and point Load()/TEMARI_LIB at the artifact, "+
+			"or add the platform to scripts/build_platform_libs.py and the "+
+			"release matrix.",
 		runtime.GOOS, runtime.GOARCH,
 	)
 }

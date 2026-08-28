@@ -42,10 +42,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: linux-x86_64, os: ubuntu-latest }
-          - { name: linux-arm64, os: ubuntu-24.04-arm }
-          - { name: windows-x86_64, os: windows-latest }
-          - { name: macos-arm64, os: macos-14 }
+          - { name: linux-x86_64, os: ubuntu-latest, targets: "" }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, targets: "" }
+          # Windows arm64 / macOS x86_64 are CROSS-compiled on the x86_64 / arm64
+          # runners (no Intel-Mac runner needed):
+          - { name: windows-x86_64, os: windows-latest, targets: aarch64-pc-windows-msvc }
+          - { name: macos-arm64, os: macos-14, targets: x86_64-apple-darwin }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -53,7 +55,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Build bundled cdylib (host platform)
+      - name: Install cross-compile targets
+        if: matrix.targets != ''
+        run: rustup target add ${{ matrix.targets }}
+      - name: Build bundled cdylib (host + cross targets)
         shell: bash
         run: |
           rm -rf bindings/python/temari/lib bindings/go/lib
