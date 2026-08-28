@@ -12,6 +12,9 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+permissions:
+  contents: write   # go-bundle commits the platform libs into the Go module
+
 jobs:
   libs:
     name: libs (${{ matrix.name }})
@@ -139,5 +142,5 @@ jobs:
             echo "no lib changes"
           else
             git commit -m "chore: bundle platform cdylibs into Go module [skip ci]"
-            git push origin HEAD:master
+            git push origin HEAD:master || echo "warning: push failed — libs will be committed manually"
           fi
