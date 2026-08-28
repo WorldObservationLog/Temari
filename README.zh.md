@@ -33,10 +33,11 @@ Windows arm64 为**交叉编译**产出,不使用 Intel Mac runner)——目标�
 temari = "0.1"
 ```
 
-**未预编译的平台**(如 riscv64、ppc64le、FreeBSD):Python wheel 内置了 Rust
-源码,可自行编译——安装时用 `pip install temari --no-binary :all:`,或装有
-`cargo` 时首次使用自动编译。Go 模块未携带 Rust 源码;此类平台上请自行构建
-动态库(`cargo build --release`)并用 `TEMARI_LIB` / `Load()` 指定。
+**未预编译的平台**(如 riscv64、ppc64le、FreeBSD):Python wheel 与 Go 模块都
+内置了 Rust 源码,可自行编译——Python 在安装时(`pip install temari
+--no-binary :all:`)或首次使用;Go 在首次 `LoadDefault()` 时。需要装有
+`cargo`;否则请自行构建动态库(`cargo build --release`)并用 `TEMARI_LIB` /
+`Load()` 指定。
 
 > 仅 FFI / 手动加载路径需要自行构建动态库(`cargo build --release`)。
 

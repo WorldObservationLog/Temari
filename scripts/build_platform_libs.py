@@ -81,6 +81,16 @@ def build_one(triple):
     print(f"[bundle] {key}/{fname}", flush=True)
 
 
+def sync_go_crate():
+    """Keep bindings/go/crate/ (embedded Rust source for Go self-build) in sync
+    with the repo crate source."""
+    dest = os.path.join(REPO, "bindings", "go", "crate")
+    shutil.rmtree(dest, ignore_errors=True)
+    shutil.copytree(os.path.join(REPO, "src"), os.path.join(dest, "src"))
+    shutil.copy2(os.path.join(REPO, "Cargo.toml"), os.path.join(dest, "Cargo.toml"))
+    print("[bundle] go crate source -> bindings/go/crate/", flush=True)
+
+
 def main():
     targets = list(installed_targets()) or [host_target()]
     ht = host_target()
@@ -92,6 +102,7 @@ def main():
         if triple in TARGETS:
             build_one(triple)
             built += 1
+    sync_go_crate()
     print(f"\nDone: attempted {built} target(s). "
           f"Libs -> bindings/python/temari/lib/ and bindings/go/lib/")
     print("Reminder: macOS/other targets must be built on that platform or in CI.")

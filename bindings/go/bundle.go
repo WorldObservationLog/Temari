@@ -61,11 +61,19 @@ func platformKey() string {
 }
 
 // LoadDefault loads the cdylib bundled with this module for the current
-// platform. Prefer it over Load(path) when using the distributed package.
+// platform. For un-precompiled platforms it falls back to compiling the
+// embedded Rust source with `cargo` (cached under the user cache dir).
+// Prefer it over Load(path) when using the distributed package.
 func LoadDefault() (*Library, error) {
-	p, err := BundledLibraryPath()
-	if err != nil {
+	if p, err := BundledLibraryPath(); err == nil {
+		return Load(p)
+	}
+	if p, err := selfBuildLibrary(); err == nil {
+		return Load(p)
+	}
+	// report the "no bundled lib" error, which includes full instructions
+	if _, err := BundledLibraryPath(); err != nil {
 		return nil, err
 	}
-	return Load(p)
+	return nil, fmt.Errorf("temari: no usable cdylib for %s-%s", runtime.GOOS, runtime.GOARCH)
 }

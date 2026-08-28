@@ -22,7 +22,9 @@ go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0
 
 The module ships the cdylibs for all platforms under `lib/<platform>/`, and
 `LoadDefault()` selects the right one for the current GOOS/GOARCH — no Rust
-toolchain needed on the target machine.
+toolchain needed on the target machine. The Rust source is also embedded
+(`crate/`), so on an un-precompiled platform `LoadDefault()` compiles it on
+first use with `cargo` (cached under the user cache dir).
 
 ## Usage
 

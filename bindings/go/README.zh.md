@@ -18,7 +18,8 @@ go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0
 ```
 
 模块已内置各平台动态库(`lib/<平台>/`),`LoadDefault()` 会按当前 GOOS/GOARCH
-自动选择——目标机器**无需 Rust 工具链**。
+自动选择——目标机器**无需 Rust 工具链**。Rust 源码也已随模块内置(`crate/`),
+未预编译的平台首次 `LoadDefault()` 时会用 `cargo` 自动编译(缓存到用户缓存目录)。
 
 ## 使用
 
