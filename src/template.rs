@@ -6,11 +6,39 @@ use std::fs;
 
 pub const CTX_SIZE: usize = 0x8000;
 
+/// Original state-slot offsets (in the 0x2000-entry layout) that the round
+/// chain actually touches. `St` is compacted: compact slot `i` holds the value
+/// of the original slot `ST_USED[i]` (ST_USED is sorted ascending, so a
+/// binary search maps an original offset to its compact index).
+pub const ST_USED: &[usize] = &[
+    32, 64, 72, 80, 88, 96, 104, 112, 120, 144, 152, 176,
+    192, 200, 208, 216, 224, 232, 240, 248, 256, 264, 280, 288,
+    304, 336, 344, 352, 360, 368, 376, 384, 392, 400, 408, 416,
+    424, 432, 440, 448, 512, 528, 536, 544, 552, 560, 568, 576,
+    584, 592, 600, 608, 616, 624, 640, 648, 656, 664, 672, 680,
+    688, 696, 704, 720, 728, 736, 744, 752, 760, 768, 776, 784,
+    792, 800, 808, 816, 824, 832, 840, 848, 856, 864, 872, 880,
+    888, 896, 904, 912, 920, 944, 952, 960, 968, 976, 992, 1000,
+    1016, 1024, 1040, 1048, 1056, 1064, 1072, 1088, 1096, 1104, 1120, 1128,
+    1136, 1144, 1152, 1160, 1168, 1240, 1248, 1256, 1264, 1272, 1280, 1288,
+    1296, 1304, 1312, 1320, 1328, 1336, 1344, 1352, 1360, 1368, 1376, 1384,
+    1392, 1400, 1408, 1416, 1424, 1432, 1440, 1448, 1456, 1464, 1472, 1480,
+    1496, 1512, 1520, 1528, 1536, 1544, 1552, 1560, 1568, 1576, 1592, 1600,
+    1624, 1632, 1640, 1648, 1656, 1664, 1672, 1680, 1688, 1704, 1712, 1720,
+    1728, 1736, 1752, 1760, 1768, 1776, 1784, 1792, 1800, 1856, 1888, 1896,
+    1904, 1912, 1920,
+];
+
+/// Map an original state offset to its compact index, if that slot is used.
+fn st_compact_index(old: usize) -> Option<usize> {
+    ST_USED.binary_search(&old).ok()
+}
+
 /// Load a binary template file produced by gen_testvec.py:
 ///   ctx[0x8000] | st_init[0x2000 * 4 LE] | rdx u32 | rcx u32 | rax u32 | r9 u32 | rbp u32
 ///
 /// The on-disk state block always holds 0x2000 (8192) u32 entries, but the round
-/// chain only ever reads st[0..=1920], so we keep only the first ST_SIZE (2048).
+/// chain only touches the `ST_USED` slots, so only those are kept (compacted).
 /// The read offset still skips the full on-disk block so the trailing registers
 /// are read from the correct position.
 pub fn load_binary_template(path: &str) -> Template {
@@ -21,12 +49,15 @@ pub fn load_binary_template(path: &str) -> Template {
     let ctx = data[off..off + CTX_SIZE].to_vec();
     off += CTX_SIZE;
     let mut st = [0u32; ST_SIZE];
-    for i in 0..ST_SIZE {
-        st[i] = u32::from_le_bytes([
-            data[off + i * 4],
-            data[off + i * 4 + 1],
-            data[off + i * 4 + 2],
-            data[off + i * 4 + 3],
+    for (pos, &old) in ST_USED.iter().enumerate() {
+        if old >= FILE_ST_SIZE {
+            continue;
+        }
+        st[pos] = u32::from_le_bytes([
+            data[off + old * 4],
+            data[off + old * 4 + 1],
+            data[off + old * 4 + 2],
+            data[off + old * 4 + 3],
         ]);
     }
     off += FILE_ST_SIZE * 4; // skip the full on-disk st block (incl. unused high slots)
@@ -262,12 +293,12 @@ pub fn template_from_json(json: &str) -> Result<Template, String> {
     let mut st = [0u32; ST_SIZE];
     for &off in ST_SLOTS.iter() {
         let off = off as usize;
-        if off >= ST_SIZE {
-            continue; // high slots exist in the 40020 state blob but are never read by the round chain
-        }
-        let pos = 0x2000usize - off;
-        if pos + 4 <= st_raw.len() {
-            st[off] = u32::from_le_bytes(st_raw[pos..pos + 4].try_into().unwrap());
+        // only keep slots the round chain actually reads (compacted layout)
+        if let Some(pos) = st_compact_index(off) {
+            let src = 0x2000usize - off;
+            if src + 4 <= st_raw.len() {
+                st[pos] = u32::from_le_bytes(st_raw[src..src + 4].try_into().unwrap());
+            }
         }
     }
     Ok(Template::new(ctx, st, R1Entry { rdx, rcx, rax, r9, rbp }))

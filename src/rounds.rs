@@ -83,22 +83,22 @@ fn process_block(tmpl: &Template, st: &mut St, ct: &[u8], bi: usize, out16: &mut
     );
 
     // R3 boundary parameters (from decrypt_tool.decrypt_sample)
-    // cp12 is now [st[0x48], st[0x250], st[0x290]] snapshot: [0]=0x48, [1]=0x250, [2]=0x290
+    // cp12 is now [st[2], st[49], st[56]] snapshot: [0]=0x48, [1]=0x250, [2]=0x290
     let cp12 = &r2v.cp12;
-    let r8p = cp12[2] ^ st[0x5B8] ^ cp12[1];
-    let v6 = t4(ctx, 0x46a0, st[0x390] ^ 0x2B)
-        ^ st[0x5F0]
+    let r8p = cp12[2] ^ st[141] ^ cp12[1];
+    let v6 = t4(ctx, 0x46a0, st[87] ^ 0x2B)
+        ^ st[146]
         ^ t4(ctx, 0x4ac0, ((r8p >> 24) & 0xFF) ^ 0x29)
-        ^ t4(ctx, 0x2ff0, ((st[0x298] >> 16) & 0xFF) ^ 0xD6);
+        ^ t4(ctx, 0x2ff0, ((st[57] >> 16) & 0xFF) ^ 0xD6);
     let v9 = t4(ctx, 0x4ac0, cp12[0])
-        ^ st[0x540]
+        ^ st[126]
         ^ t4(ctx, 0x2ff0, ((r2v.v171 >> 16) & 0xFF) ^ 0x69);
-    let v11 = t4(ctx, 0x3950, (st[0x298] & 0xFF) ^ 0x57)
-        ^ st[0x538]
+    let v11 = t4(ctx, 0x3950, (st[57] & 0xFF) ^ 0x57)
+        ^ st[125]
         ^ t4(ctx, 0x46a0, ((r8p >> 8) & 0xFF) ^ 0x2F);
 
-    let a2 = st[0x270];
-    let a6 = st[0x280];
+    let a2 = st[53];
+    let a6 = st[54];
     let r3v = round3_sub8000(
         ctx,
         st,
@@ -118,8 +118,8 @@ fn process_block(tmpl: &Template, st: &mut St, ct: &[u8], bi: usize, out16: &mut
     reconstruct_block(&r3v.pt, out16);
 
     // CBC state pass-through
-    st[0x108] = st[0x180];
-    st[0x220] = st[0x220].wrapping_add(0x10);
+    st[21] = st[31];
+    st[43] = st[43].wrapping_add(0x10);
 }
 
 /// Decrypt the 16-byte-aligned prefix of `ciphertext` into a pre-sized slice.
