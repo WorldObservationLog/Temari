@@ -33,6 +33,13 @@ normal dependency:
 temari = "0.1"
 ```
 
+**Un-precompiled platforms** (e.g. macOS x86_64, Windows arm64): the Python
+wheel ships the Rust source, so it can self-compile — at install time with
+`pip install temari --no-binary :all:`, or automatically on first use when
+`cargo` is installed. The Go module does not carry the Rust source; on such
+platforms build the cdylib yourself (`cargo build --release`) and point
+`TEMARI_LIB` / `Load()` at it.
+
 > Building the cdylib by hand (`cargo build --release`) is only needed for the
 > FFI / manual-loading path.
 

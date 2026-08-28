@@ -32,6 +32,8 @@ import asyncio
 import ctypes
 import os
 import platform
+import shutil
+import subprocess
 import sys
 
 __all__ = ["Temari", "TemariError", "StreamDecryptor", "load", "default_library_path"]
@@ -418,10 +420,68 @@ _LOADED = {}
 
 
 def load(path=None):
-    """Load (and cache) the libtemari cdylib. ``path=None`` -> default path."""
+    """Load (and cache) the libtemari cdylib. ``path=None`` -> default path.
+
+    If no prebuilt/bundled library exists for the current platform and a
+    `cargo` toolchain is available, the bundled Rust source (temari/_src) is
+    compiled on demand into ``~/.cache/temari/lib/`` — so un-precompiled
+    platforms (e.g. macOS x86_64, Windows arm64) work too.
+    """
     path = path or default_library_path()
+    if not path or not os.path.exists(path):
+        built = _auto_build_library()
+        if built:
+            path = built
+    if not path or not os.path.exists(path):
+        raise TemariError(
+            "no libtemari found for this platform. Options: install the "
+            "standard wheel (Linux x86_64/arm64, Windows x86_64, macOS arm64), "
+            "or build it yourself: `cargo build --release` in the temari repo "
+            "(Rust required), then set TEMARI_LIB to the artifact."
+        )
     lib = _LOADED.get(os.path.abspath(path))
     if lib is None:
         lib = Library(path)
         _LOADED[os.path.abspath(path)] = lib
     return lib
+
+
+def _auto_build_library():
+    """Compile the bundled Rust source (temari/_src) with cargo into a user
+    cache dir for an un-precompiled platform. Returns the built cdylib path,
+    or None if there is no cargo / no bundled source / the build fails."""
+    key = _platform_key()
+    if not key:
+        return None
+    name = ("temari.dll" if key.startswith("windows")
+            else "libtemari.dylib" if key.startswith("macos") else "libtemari.so")
+    cache = os.path.join(os.path.expanduser("~"), ".cache", "temari", "lib", key)
+    out = os.path.join(cache, name)
+    if os.path.exists(out):
+        return out
+    cargo = shutil.which("cargo")
+    if not cargo:
+        return None
+    here = os.path.dirname(os.path.abspath(__file__))
+    src = os.path.join(here, "_src")
+    if not os.path.isfile(os.path.join(src, "Cargo.toml")):
+        return None
+    # build in the cache so we never write into site-packages
+    build_dir = os.path.join(os.path.expanduser("~"), ".cache", "temari", "src")
+    if os.path.isdir(build_dir):
+        shutil.rmtree(build_dir, ignore_errors=True)
+    shutil.copytree(src, build_dir)
+    try:
+        subprocess.check_call(
+            [cargo, "build", "--release",
+             "--manifest-path", os.path.join(build_dir, "Cargo.toml")],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    artifact = os.path.join(build_dir, "target", "release", name)
+    if not os.path.exists(artifact):
+        return None
+    os.makedirs(cache, exist_ok=True)
+    shutil.copy2(artifact, out)
+    return out

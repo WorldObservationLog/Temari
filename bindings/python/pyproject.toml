@@ -29,4 +29,4 @@ Documentation = "https://github.com/WorldObservationLog/Temari"
 packages = ["temari"]
 
 [tool.setuptools.package-data]
-temari = ["lib/*/*"]
+temari = ["lib/*/*", "_src/*", "_src/src/*"]

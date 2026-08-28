@@ -5,13 +5,13 @@ platform (scripts/build_platform_libs.py) and bundles it inside the wheel
 under temari/lib/<platform>/, so a pip-installed package works out of the box
 without a Rust toolchain on the target machine.
 
-Each wheel is tagged for the platform whose lib it bundles
-(scripts/build_platform_libs.py places exactly one platform's lib per build;
-GitHub Actions builds one wheel per native runner). On Linux CI, cibuildwheel
-+ auditwheel further refine the manylinux tag.
+The wheel also carries the Rust source under temari/_src/ so an un-precompiled
+platform can self-compile at install time (pip install --no-binary :all:) or
+on first use (runtime fallback), provided `cargo` is installed.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -23,6 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCRIPT = os.path.join(REPO, "scripts", "build_platform_libs.py")
 LIB_DIR = os.path.join(HERE, "temari", "lib")
+SRC_DIR = os.path.join(HERE, "temari", "_src")
 
 # platform key (lib directory name) -> wheel platform tag.
 # Used only for single-platform local/dev builds; the CI release assembles all
@@ -69,6 +70,54 @@ def _bundled_platform_present():
     return False
 
 
+def _copy_rust_source():
+    """Copy the Rust crate source into temari/_src/ so un-precompiled platforms
+    can self-compile. Called from both build_py and sdist: `python -m build`
+    builds the wheel from the sdist in a temp dir where the repo root is not
+    reachable, so the source must already be present in the packaged tree."""
+    if os.path.isdir(os.path.join(REPO, "src")):
+        shutil.rmtree(SRC_DIR, ignore_errors=True)
+        shutil.copytree(os.path.join(REPO, "src"), os.path.join(SRC_DIR, "src"))
+        # Cargo.toml only — deliberately NOT rust-toolchain.toml, so the
+        # self-build uses whatever stable toolchain the user has.
+        p = os.path.join(REPO, "Cargo.toml")
+        if os.path.exists(p):
+            shutil.copy2(p, os.path.join(SRC_DIR, "Cargo.toml"))
+
+
+def _cargo_build_from(src_dir, out_dir, name):
+    """cargo build --release from src_dir (a crate root), copy the cdylib
+    `name` into out_dir. Returns the artifact path or None."""
+    cargo = shutil.which("cargo")
+    if not cargo:
+        return None
+    manifest = os.path.join(src_dir, "Cargo.toml")
+    if not os.path.isfile(manifest):
+        return None
+    subprocess.check_call(
+        [cargo, "build", "--release", "--manifest-path", manifest],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    artifact = os.path.join(src_dir, "target", "release", name)
+    if not os.path.isfile(artifact):
+        return None
+    os.makedirs(out_dir, exist_ok=True)
+    shutil.copy2(artifact, os.path.join(out_dir, name))
+    return artifact
+
+
+def _bundled_lib_name():
+    import platform as _pl
+    import sys as _sys
+
+    p = _sys.platform
+    osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
+        "windows" if p in ("win32", "cygwin") else None
+    if not osname:
+        return None
+    return {"windows": "temari.dll", "macos": "libtemari.dylib"}.get(osname, "libtemari.so")
+
+
 class BuildPy(build_py):
     """Compile the host cdylib and bundle it before building the package.
 
@@ -79,15 +128,41 @@ class BuildPy(build_py):
     """
 
     def run(self):
+        # bundle the Rust source so un-precompiled platforms can self-compile
+        _copy_rust_source()
         if not _bundled_platform_present():
+            name = _bundled_lib_name()
             if os.path.exists(SCRIPT):
                 print("temari: building bundled cdylib (host platform)...")
                 subprocess.check_call([sys.executable, SCRIPT], cwd=REPO)
+            elif name and os.path.isdir(SRC_DIR):
+                # sdist install on an un-precompiled platform: build from the
+                # bundled source (install-time self-compile, needs cargo)
+                print("temari: compiling bundled Rust source for this platform...")
+                try:
+                    _cargo_build_from(SRC_DIR, LIB_DIR, name)
+                except (subprocess.CalledProcessError, OSError):
+                    raise RuntimeError(
+                        "temari: this platform has no bundled cdylib and the "
+                        "self-compile failed — install Rust (cargo) and retry, "
+                        "or use the standard wheel."
+                    ) from None
             else:
                 raise RuntimeError(
-                    "temari: no bundled cdylib and scripts/build_platform_libs.py "
-                    "not found — build the cdylib first (cargo build --release)"
+                    "temari: no bundled cdylib, no build script and no bundled "
+                    "Rust source — build the cdylib first (cargo build --release)"
                 )
+        super().run()
+
+
+from setuptools.command.sdist import sdist  # noqa: E402
+
+
+class Sdist(sdist):
+    """Make sure the Rust source is present before archiving the sdist."""
+
+    def run(self):
+        _copy_rust_source()
         super().run()
 
 
@@ -112,4 +187,4 @@ class PlatformWheel(bdist_wheel):
         return ("py3", "none", plat)
 
 
-setup(cmdclass={"build_py": BuildPy, "bdist_wheel": PlatformWheel})
+setup(cmdclass={"build_py": BuildPy, "bdist_wheel": PlatformWheel, "sdist": Sdist})

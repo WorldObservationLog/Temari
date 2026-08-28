@@ -22,3 +22,5 @@ bindings/go/temari.exe
 .idea/
 .vscode/
 /.wsl-venv
+# generated copy of the Rust source bundled for self-compile
+bindings/python/temari/_src/
