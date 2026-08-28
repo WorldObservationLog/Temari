@@ -21,7 +21,7 @@ All three packages are published and self-contained (platform cdylibs bundled):
 |---|---|---|
 | crates.io | `temari` | `cargo add temari` |
 | PyPI | `temari` | `pip install temari` |
-| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.3.0` |
+| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.4.0` |
 
 The Python and Go packages automatically select the bundled cdylib for the
 current platform (Linux x86_64 / arm64, Windows x86_64 / arm64, macOS
