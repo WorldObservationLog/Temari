@@ -90,6 +90,18 @@ plains, _ := t.DecryptPar(samples)
 t.Close()
 ```
 
+#### WebAssembly(浏览器)
+另见 [`bindings/wasm`](./bindings/wasm/README.md)
+
+```js
+import { loadTemari } from "temari.js";
+
+const temari = await loadTemari("/temari.wasm");
+const t = temari.Temari.fromJson(jsonBytes);   // 调用方拉取 JSON
+const plain = t.decrypt(ctBytes);              // 单样本(wasm 无线程)
+t.close();
+```
+
 ### 特别感谢
 - 匿名人士提供了原始的 Frida 解密程序与 wrapper 解密程序
 - chocomint 为 wrapper 提供了 arm64 架构支持

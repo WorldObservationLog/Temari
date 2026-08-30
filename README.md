@@ -94,6 +94,18 @@ plains, _ := t.DecryptPar(samples)
 t.Close()
 ```
 
+#### WebAssembly (browser)
+See also [`bindings/wasm`](./bindings/wasm/README.md)
+
+```js
+import { loadTemari } from "temari.js";
+
+const temari = await loadTemari("/temari.wasm");
+const t = temari.Temari.fromJson(jsonBytes);   // caller fetches the JSON
+const plain = t.decrypt(ctBytes);              // single sample (no threads in wasm)
+t.close();
+```
+
 ### Special Thanks
 - An anonymous person provided the original Frida decryption program and the wrapper decryption program
 - chocomint provided arm64 architecture support for the wrapper
