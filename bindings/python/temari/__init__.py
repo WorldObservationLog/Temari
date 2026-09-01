@@ -38,7 +38,7 @@ import sys
 
 __all__ = ["Temari", "TemariError", "StreamDecryptor", "load", "default_library_path"]
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 
 
 class TemariError(RuntimeError):

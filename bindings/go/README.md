@@ -17,7 +17,7 @@ tests, and runs work on Linux, macOS, and Windows.
 ## Install
 
 ```bash
-go get github.com/WorldObservationLog/Temari/bindings/go@v0.4.0
+go get github.com/WorldObservationLog/Temari/bindings/go@v0.5.0
 ```
 
 The module ships the cdylibs for all platforms under `lib/<platform>/`, and

@@ -21,7 +21,7 @@ Apple Music Fairplay Streaming 解密库
 |---|---|---|
 | crates.io | `temari` | `cargo add temari` |
 | PyPI | `temari` | `pip install temari` |
-| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.4.0` |
+| Go | `github.com/WorldObservationLog/Temari/bindings/go` | `go get github.com/WorldObservationLog/Temari/bindings/go@v0.5.0` |
 
 Python 与 Go 包会自动选择**当前平台**的内置动态库(Linux x86_64 / arm64、
 Windows x86_64 / arm64、macOS x86_64 / arm64——其中 macOS x86_64 与

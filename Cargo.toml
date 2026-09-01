@@ -1,6 +1,6 @@
 [package]
 name = "temari"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Apple Music FairPlay SAMPLE-AES sample decryption library (cdylib FFI)"
 license = "MIT"
