@@ -36,6 +36,8 @@ PLAT_TAGS = {
     "windows-arm64": "win_arm64",
     "macos-x86_64": "macosx_10_12_x86_64",
     "macos-arm64": "macosx_11_0_arm64",
+    # PEP 738 Android wheel tag (Android 5.0+ / min API 21)
+    "android-arm64": "21_arm64_v8a_android",
 }
 
 

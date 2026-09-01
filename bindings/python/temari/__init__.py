@@ -46,12 +46,17 @@ class TemariError(RuntimeError):
 
 
 def _platform_key():
-    """Return a short platform key like 'linux-x86_64' / 'windows-x86_64' /
-    'macos-arm64', matching the bundled-lib directory names produced by
-    scripts/build_platform_libs.py, or None if unknown."""
+    """Return a short platform key like 'linux-x86_64' / 'android-arm64' /
+    'windows-x86_64' / 'macos-arm64', matching the bundled-lib directory names
+    produced by scripts/build_platform_libs.py, or None if unknown."""
     p = sys.platform
-    osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
-        "windows" if p in ("win32", "cygwin") else None
+    if hasattr(sys, "getandroidapilevel"):
+        # CPython on Android reports sys.platform == 'linux'; distinguish it
+        # via PEP 738's sys.getandroidapilevel().
+        osname = "android"
+    else:
+        osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
+            "windows" if p in ("win32", "cygwin") else None
     if not osname:
         return None
     m = platform.machine().lower()

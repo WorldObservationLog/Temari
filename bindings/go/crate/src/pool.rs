@@ -30,7 +30,8 @@ struct Job {
     ptrs: *const *const u8,
     lens: *const usize,
     offs: *const usize,
-    n: usize,
+    n: usize,      // number of samples
+    pairs: usize,  // number of 2-lane work items (ceil(n/2))
     next: AtomicUsize,
     pending: AtomicUsize,
     finished: AtomicBool,
@@ -105,6 +106,7 @@ impl Pool {
         if n == 0 {
             return;
         }
+        let pairs = (n + 1) / 2;
         // serialize with other concurrent run() calls (single job slot)
         let _run_guard = self.shared.run_lock.lock().unwrap();
         let job = Arc::new(Job {
@@ -113,8 +115,9 @@ impl Pool {
             lens: lens.as_ptr(),
             offs: offs.as_ptr(),
             n,
+            pairs,
             next: AtomicUsize::new(0),
-            pending: AtomicUsize::new(n),
+            pending: AtomicUsize::new(pairs),
             finished: AtomicBool::new(false),
             out: out.as_mut_ptr(),
         });
@@ -150,24 +153,31 @@ fn worker_loop(shared: Arc<Shared>) {
         };
         my_epoch += 1;
         loop {
-            let i = job.next.fetch_add(1, Ordering::Relaxed);
-            if i >= job.n {
+            let p = job.next.fetch_add(1, Ordering::Relaxed);
+            if p >= job.pairs {
                 break;
             }
             // SAFETY: run() blocks until finished; ptrs/lens/offs/out/tmpl
-            // live for the whole call; each i is owned by one worker.
-            let (ptr, len, off) = unsafe {
-                (
-                    *job.ptrs.add(i),
-                    *job.lens.add(i),
-                    *job.offs.add(i),
-                )
+            // live for the whole call; each pair (2i, 2i+1) is owned by
+            // exactly one worker and writes disjoint output regions.
+            let i1 = p * 2;
+            let (ptr1, len1, off1) = unsafe {
+                (*job.ptrs.add(i1), *job.lens.add(i1), *job.offs.add(i1))
             };
-            let sample = unsafe { slice::from_raw_parts(ptr, len) };
-            let out_region =
-                unsafe { slice::from_raw_parts_mut(job.out.add(off), len) };
+            let sample1 = unsafe { slice::from_raw_parts(ptr1, len1) };
+            let out1 = unsafe { slice::from_raw_parts_mut(job.out.add(off1), len1) };
             let tmpl = unsafe { &*job.tmpl };
-            crate::rounds::decrypt_region_into(tmpl, sample, out_region);
+            let i2 = i1 + 1;
+            if i2 < job.n {
+                let (ptr2, len2, off2) = unsafe {
+                    (*job.ptrs.add(i2), *job.lens.add(i2), *job.offs.add(i2))
+                };
+                let sample2 = unsafe { slice::from_raw_parts(ptr2, len2) };
+                let out2 = unsafe { slice::from_raw_parts_mut(job.out.add(off2), len2) };
+                crate::rounds::decrypt_region_pair_into(tmpl, sample1, sample2, out1, out2);
+            } else {
+                crate::rounds::decrypt_region_into(tmpl, sample1, out1);
+            }
             if job.pending.fetch_sub(1, Ordering::AcqRel) == 1 {
                 job.finished.store(true, Ordering::Release);
                 shared.cv_done.notify_all();

@@ -44,6 +44,7 @@ jobs:
         include:
           - { name: linux-x86_64, os: ubuntu-latest, targets: "" }
           - { name: linux-arm64, os: ubuntu-24.04-arm, targets: "" }
+          - { name: android-arm64, os: ubuntu-latest, targets: aarch64-linux-android }
           # Windows arm64 / macOS x86_64 are CROSS-compiled on the x86_64 / arm64
           # runners (no Intel-Mac runner needed):
           - { name: windows-x86_64, os: windows-latest, targets: aarch64-pc-windows-msvc }
@@ -58,6 +59,12 @@ jobs:
       - name: Install cross-compile targets
         if: matrix.targets != ''
         run: rustup target add ${{ matrix.targets }}
+      - name: Install Android NDK
+        if: matrix.name == 'android-arm64'
+        run: |
+          # ubuntu-latest ships the NDK under $ANDROID_HOME/ndk/<version>;
+          # point ANDROID_NDK_HOME at it for scripts/build_platform_libs.py
+          echo "ANDROID_NDK_HOME=$(ls -d "$ANDROID_HOME"/ndk/* | head -1)" >> "$GITHUB_ENV"
       - name: Build bundled cdylib (host + cross targets)
         shell: bash
         run: |
