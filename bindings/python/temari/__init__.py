@@ -50,9 +50,10 @@ def _platform_key():
     'windows-x86_64' / 'macos-arm64', matching the bundled-lib directory names
     produced by scripts/build_platform_libs.py, or None if unknown."""
     p = sys.platform
-    if hasattr(sys, "getandroidapilevel"):
-        # CPython on Android reports sys.platform == 'linux'; distinguish it
-        # via PEP 738's sys.getandroidapilevel().
+    if p == "android" or hasattr(sys, "getandroidapilevel"):
+        # Android: PEP 738 builds report sys.platform == 'android' (CPython
+        # 3.13+); older builds report 'linux' but still expose
+        # sys.getandroidapilevel().
         osname = "android"
     else:
         osname = "linux" if p.startswith("linux") else "macos" if p == "darwin" else \
