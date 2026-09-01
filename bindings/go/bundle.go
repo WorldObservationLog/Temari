@@ -35,9 +35,16 @@ func BundledLibraryPath() (string, error) {
 		names = []string{"libtemari.so"}
 	}
 	for _, name := range names {
-		p := filepath.Join(dir, "lib", platformKey(), name)
-		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
-			return p, nil
+		keys := []string{platformKey()}
+		// legacy dir spelling from go modules <= v0.4.0: linux used "aarch64"
+		if platformKey() == "linux-arm64" {
+			keys = append(keys, "linux-aarch64")
+		}
+		for _, key := range keys {
+			p := filepath.Join(dir, "lib", key, name)
+			if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+				return p, nil
+			}
 		}
 	}
 	return "", fmt.Errorf(

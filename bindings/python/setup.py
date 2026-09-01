@@ -31,7 +31,7 @@ SRC_DIR = os.path.join(HERE, "temari", "_src")
 # so these tags do not affect the published wheel.
 PLAT_TAGS = {
     "linux-x86_64": "manylinux_2_34_x86_64",
-    "linux-aarch64": "manylinux_2_34_aarch64",
+    "linux-arm64": "manylinux_2_34_aarch64",
     "windows-x86_64": "win_amd64",
     "windows-arm64": "win_arm64",
     "macos-x86_64": "macosx_10_12_x86_64",

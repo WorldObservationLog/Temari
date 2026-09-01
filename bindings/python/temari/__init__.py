@@ -38,7 +38,7 @@ import sys
 
 __all__ = ["Temari", "TemariError", "StreamDecryptor", "load", "default_library_path"]
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 
 class TemariError(RuntimeError):
@@ -79,6 +79,11 @@ def _bundled_library_path():
         ("libtemari.dylib",) if key.startswith("macos") else ("libtemari.so",)
     for name in names:
         p = os.path.join(here, "lib", key, name)
+        if os.path.exists(p):
+            return p
+    # legacy dir spelling from temari <= 0.3.0 wheels: linux used "aarch64"
+    if key == "linux-arm64":
+        p = os.path.join(here, "lib", "linux-aarch64", "libtemari.so")
         if os.path.exists(p):
             return p
     return None

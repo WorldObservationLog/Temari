@@ -78,11 +78,15 @@ jobs:
           find libs -type f | head -20
           rm -rf bindings/python/temari/lib
           mkdir -p bindings/python/temari/lib
-          find libs -type d \( -name "linux-x86_64" -o -name "linux-aarch64" \
-            -o -name "android-arm64" -o -name "windows-x86_64" \
-            -o -name "windows-arm64" -o -name "macos-arm64" \
-            -o -name "macos-x86_64" \) \
+          find libs -type d \( -name "linux-x86_64" -o -name "linux-arm64" \
+            -o -name "linux-aarch64" -o -name "android-arm64" \
+            -o -name "windows-x86_64" -o -name "windows-arm64" \
+            -o -name "macos-arm64" -o -name "macos-x86_64" \) \
             -exec cp -r {} bindings/python/temari/lib/ \;
+          # normalize the legacy linux-aarch64 dir name to linux-arm64
+          if [ -d bindings/python/temari/lib/linux-aarch64 ] && [ ! -d bindings/python/temari/lib/linux-arm64 ]; then
+            mv bindings/python/temari/lib/linux-aarch64 bindings/python/temari/lib/linux-arm64
+          fi
           find bindings/python/temari/lib -type f
       - name: Build sdist + universal wheel
         working-directory: bindings/python
@@ -136,11 +140,15 @@ jobs:
           find libs -type f | head -20
           rm -rf bindings/go/lib
           mkdir -p bindings/go/lib
-          find libs -type d \( -name "linux-x86_64" -o -name "linux-aarch64" \
-            -o -name "android-arm64" -o -name "windows-x86_64" \
-            -o -name "windows-arm64" -o -name "macos-arm64" \
-            -o -name "macos-x86_64" \) \
+          find libs -type d \( -name "linux-x86_64" -o -name "linux-arm64" \
+            -o -name "linux-aarch64" -o -name "android-arm64" \
+            -o -name "windows-x86_64" -o -name "windows-arm64" \
+            -o -name "macos-arm64" -o -name "macos-x86_64" \) \
             -exec cp -r {} bindings/go/lib/ \;
+          # normalize the legacy linux-aarch64 dir name to linux-arm64
+          if [ -d bindings/go/lib/linux-aarch64 ] && [ ! -d bindings/go/lib/linux-arm64 ]; then
+            mv bindings/go/lib/linux-aarch64 bindings/go/lib/linux-arm64
+          fi
           find bindings/go/lib -type f
       - name: Commit and push
         run: |

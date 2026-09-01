@@ -25,7 +25,7 @@ if not CARGO:
 # target-triple -> (platform key, artifact filename)
 TARGETS = {
     "x86_64-unknown-linux-gnu": ("linux-x86_64", "libtemari.so"),
-    "aarch64-unknown-linux-gnu": ("linux-aarch64", "libtemari.so"),
+    "aarch64-unknown-linux-gnu": ("linux-arm64", "libtemari.so"),
     "aarch64-linux-android": ("android-arm64", "libtemari.so"),
     "x86_64-pc-windows-gnu": ("windows-x86_64", "temari.dll"),
     "x86_64-pc-windows-msvc": ("windows-x86_64", "temari.dll"),

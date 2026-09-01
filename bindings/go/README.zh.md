@@ -14,7 +14,7 @@
 ## 安装
 
 ```bash
-go get github.com/WorldObservationLog/Temari/bindings/go@v0.5.0
+go get github.com/WorldObservationLog/Temari/bindings/go@v0.5.1
 ```
 
 模块已内置各平台动态库(`lib/<平台>/`),`LoadDefault()` 会按当前 GOOS/GOARCH
